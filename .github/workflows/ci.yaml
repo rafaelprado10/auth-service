@@ -66,10 +66,11 @@ jobs:
           gosec -severity high ./...
 
       - name: SCA with Trivy (fail on CRITICAL)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           scan-type: fs
           scan-ref: .
+          trivy-version: 0.58.2
           severity: CRITICAL
           exit-code: "1"
           ignore-unfixed: true

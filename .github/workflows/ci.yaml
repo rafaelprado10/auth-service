@@ -70,7 +70,9 @@ jobs:
         with:
           scan-type: fs
           scan-ref: .
-          trivy-version: 0.58.2
+          version: v0.63.0
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
+          token-setup-trivy: ${{ secrets.GITHUB_TOKEN }}
           severity: CRITICAL
           exit-code: "1"
           ignore-unfixed: true

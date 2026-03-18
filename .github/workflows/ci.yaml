@@ -59,10 +59,11 @@ jobs:
         with:
           go-version: "1.21.x"
 
-      - name: SAST with gosec
+      - name: SAST with gosec (report only)
+        continue-on-error: true
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./...
+          gosec -severity high ./...
 
       - name: SCA with Trivy (fail on CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0

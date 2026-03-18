@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-        _ "github.com/jackc/pgx/v4/stdlib"
+	"time"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
 //	"github.com/jackc/pgx/v4/stdlib"
 	"github.com/joho/godotenv"
 )
@@ -60,8 +62,17 @@ func main() {
 	// Eles são protegidos pelo middleware de autenticação
 	mux.Handle("/admin/keys", app.masterKeyAuthMiddleware(http.HandlerFunc(app.createKeyHandler)))
 
-	log.Printf("Serviço de Autenticação (Go) rodando na porta %s", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	log.Println("Serviço de Autenticação (Go) iniciado")
+	server := &http.Server{
+		Addr:              ":" + port,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }

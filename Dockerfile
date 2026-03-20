@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.6
 
-FROM golang:1.21-bookworm AS builder
+FROM golang:1.25.8-bookworm AS builder
 
 WORKDIR /src
 
@@ -23,4 +23,3 @@ COPY --from=builder /out/auth-service /app/auth-service
 EXPOSE 8001
 
 ENTRYPOINT ["/app/auth-service"]
-

@@ -28,7 +28,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: auth-service-secrets
+                  name: auth-service-secrets 
                   key: POSTGRES_PASSWORD
             - name: MASTER_KEY
               valueFrom:

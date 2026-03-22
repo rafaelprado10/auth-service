@@ -25,7 +25,7 @@ type CreateKeyResponse struct {
 func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok"}); err != nil {
-		log.Printf("Erro ao serializar health response : %v", err)
+		log.Printf("Erro ao serializar health response: %v", err)
 		http.Error(w, "Erro ao serializar resposta", http.StatusInternalServerError)
 		return
 	}

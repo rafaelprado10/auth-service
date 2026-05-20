@@ -40,6 +40,26 @@ spec:
                 secretKeyRef:
                   name: auth-service-secrets
                   key: DATABASE_URL
+            - name: OTEL_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-service-config
+                  key: OTEL_ENABLED
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-service-config
+                  key: OTEL_SERVICE_NAME
+            - name: OTEL_SERVICE_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-service-config
+                  key: OTEL_SERVICE_VERSION
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-service-config
+                  key: OTEL_EXPORTER_OTLP_ENDPOINT
 
           readinessProbe:
             httpGet:

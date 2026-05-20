@@ -1,16 +1,15 @@
 package main
 
 import (
+	"context"
 	"database/sql"
-//	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
-//	"github.com/jackc/pgx/v4/stdlib"
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // App struct (para injeção de dependência)
@@ -20,29 +19,40 @@ type App struct {
 }
 
 func main() {
-	// Carrega o .env para desenvolvimento local. Em produção, isso não fará nada.
+	ctx := context.Background()
+
 	_ = godotenv.Load()
 
-	// --- Configuração ---
+	shutdown, err := initTelemetry(ctx)
+	if err != nil {
+		logWarning(ctx, "OpenTelemetry desabilitado ou falhou ao iniciar: "+err.Error())
+	} else {
+		defer func() {
+			_ = shutdown(context.Background())
+		}()
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8001" // Porta padrão
+		port = "8001"
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL deve ser definida")
+		logCritical(ctx, "DATABASE_URL deve ser definida")
+		os.Exit(1)
 	}
 
 	masterKey := os.Getenv("MASTER_KEY")
 	if masterKey == "" {
-		log.Fatal("MASTER_KEY deve ser definida")
+		logCritical(ctx, "MASTER_KEY deve ser definida")
+		os.Exit(1)
 	}
 
-	// --- Conexão com o Banco ---
-	db, err := connectDB(databaseURL)
+	db, err := connectDB(ctx, databaseURL)
 	if err != nil {
-		log.Fatalf("Não foi possível conectar ao banco de dados: %v", err)
+		logCritical(ctx, "Não foi possível conectar ao banco de dados: "+err.Error())
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -51,21 +61,24 @@ func main() {
 		MasterKey: masterKey,
 	}
 
-	// --- Rotas da API ---
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", app.healthHandler)
-
-	// Endpoint público para validar uma chave
 	mux.HandleFunc("/validate", app.validateKeyHandler)
+	mux.Handle(
+		"/admin/keys",
+		app.masterKeyAuthMiddleware(http.HandlerFunc(app.createKeyHandler)),
+	)
 
-	// Endpoints de "admin" para criar/gerenciar chaves
-	// Eles são protegidos pelo middleware de autenticação
-	mux.Handle("/admin/keys", app.masterKeyAuthMiddleware(http.HandlerFunc(app.createKeyHandler)))
+	handler := otelhttp.NewHandler(
+		requestContextMiddleware(mux),
+		serviceName(),
+	)
 
-	log.Println("Serviço de Autenticação (Go) iniciado")
+	logInfo(ctx, "Serviço de Autenticação (Go) iniciado na porta "+port)
+
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           mux,
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,
@@ -73,12 +86,12 @@ func main() {
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		logCritical(ctx, err.Error())
+		os.Exit(1)
 	}
 }
 
-// connectDB inicializa e testa a conexão com o PostgreSQL
-func connectDB(databaseURL string) (*sql.DB, error) {
+func connectDB(ctx context.Context, databaseURL string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", databaseURL)
 	if err != nil {
 		return nil, err
@@ -88,6 +101,6 @@ func connectDB(databaseURL string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	log.Println("Conectado ao PostgreSQL com sucesso!")
+	logInfo(ctx, "Conectado ao PostgreSQL com sucesso")
 	return db, nil
 }

@@ -54,7 +54,7 @@ func main() {
 		logCritical(ctx, "Não foi possível conectar ao banco de dados: "+err.Error())
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	app := &App{
 		DB:        db,

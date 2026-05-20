@@ -23,7 +23,7 @@ func serviceName() string {
 	return "auth-service"
 }
 
-func logLine(ctx context.Context, level, message string) {
+func logLine(ctx context.Context, message string) {
 	msgID := "-"
 	traceID := "-"
 	ts := time.Now().Format("2006-01-02T15:04:05.000000")
@@ -39,21 +39,20 @@ func logLine(ctx context.Context, level, message string) {
 	}
 
 	log.Printf(" %s | %s | %s | %s | %s", ts, msgID, traceID, serviceName(), message)
-	_ = level
 }
 
 func logInfo(ctx context.Context, message string) {
-	logLine(ctx, "INFO", message)
+	logLine(ctx, message)
 }
 
 func logWarning(ctx context.Context, message string) {
-	logLine(ctx, "WARN", message)
+	logLine(ctx, message)
 }
 
 func logError(ctx context.Context, message string) {
-	logLine(ctx, "ERROR", message)
+	logLine(ctx, message)
 }
 
 func logCritical(ctx context.Context, message string) {
-	logLine(ctx, "CRITICAL", message)
+	logLine(ctx, message)
 }

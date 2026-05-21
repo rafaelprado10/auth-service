@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.6
 
-FROM golang:1.25.8-bookworm AS builder
+# Go >= 1.25.10 corrige CVEs HIGH do stdlib detectados pelo Trivy (gobinary)
+FROM golang:1.26.3-bookworm AS builder
 
 WORKDIR /src
 
@@ -9,6 +10,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY . .
+
+RUN go version
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \

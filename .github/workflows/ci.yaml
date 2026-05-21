@@ -166,6 +166,7 @@ jobs:
             --severity HIGH,CRITICAL \
             --exit-code 1 \
             --ignore-unfixed \
+            --skip-version-check \
             "${{ steps.image.outputs.uri }}"
 
       - name: Push image to AWS ECR
